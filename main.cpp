@@ -214,6 +214,93 @@ void NeuralNetwork::learn(){
     printWeights(outFile);
 }
 
+// Tests the Neural Network
+void NeuralNetwork::test(){
+    string testFile;
+    string outFile;
+    
+    cout << "Please enter the name of the file containing the testing set.\n";
+    cin >> testFile;
+    ifstream fin;
+    fin.open(testFile);
+    // Checks for valid file name
+    while(!fin.is_open()){
+        cout << "The file you have entered cannot be found. Please enter a new file name.\n";
+        cin >> testFile;
+        fin.open(testFile);
+    }
+    
+    cout << "Please enter the name of the output file.\n";
+    cin >> outFile;
+    
+    // Loads testing examples
+    int numExamples;
+    fin >> numExamples;
+        // Skips to next line
+    fin.ignore(256, '\n');
+    
+        // Each example contains a vector of inputs and a vector of outputs
+    vector<vector<vector<double>>> examples;
+    vector<vector<double>> example;
+    vector<double> eInputs;
+    vector<double> eOutputs;
+    double value;
+    
+    for(int i = 0; i < numExamples; i++){
+        example.clear();
+        eInputs.clear();
+        eOutputs.clear();
+        
+        for(int j = 0; j < numInputNodes; j++){
+            fin >> value;
+            eInputs.push_back(value);
+        }
+        for(int j = 0; j < numOutputNodes; j++){
+            fin >> value;
+            eOutputs.push_back(value);
+        }
+        example.push_back(eInputs);
+        example.push_back(eOutputs);
+        examples.push_back(example);
+    }
+    fin.close();
+    vector<vector<int>> outputs;
+    vector<int> tOutputs;
+    for(int i = 0; i < numExamples; i++){
+        tOutputs.clear();
+        // Initializes inputs
+        for(int j = 0; j < numInputNodes; j++){
+            inputLayer.at(j).input = inputLayer.at(j).activation = examples.at(i).at(0).at(j);
+        }
+        
+        // Propagate forward to hidden layer
+        double sum;
+        for(int j = 0; j < numHiddenNodes; j++){
+            sum = hiddenLayer.at(j).biasWeight * (-1);
+            for(int k = 0; k < numInputNodes; k++){
+                sum += hiddenLayer.at(j).inputWeights.at(k) * inputLayer.at(k).activation;
+            }
+            hiddenLayer.at(j).input = sum;
+            hiddenLayer.at(j).activation = sigmoid(sum);
+        }
+        // Propagate forward to output layer
+        for(int j = 0; j < numOutputNodes; j++){
+            sum = outputLayer.at(j).biasWeight * (-1);
+            for(int k = 0; k < numHiddenNodes; k++){
+                sum += outputLayer.at(j).inputWeights.at(k) * hiddenLayer.at(k).activation;
+            }
+            outputLayer.at(j).input = sum;
+            outputLayer.at(j).activation = sigmoid(sum);
+            if(outputLayer.at(j).activation >= 0.5){
+                tOutputs.push_back(1);
+            } else {
+                tOutputs.push_back(0);
+            }
+        }
+        outputs.push_back(tOutputs);
+    }
+}
+
 // Prints the weights
 void NeuralNetwork::printWeights(string outputFile){
     ofstream fout;
@@ -240,8 +327,21 @@ void NeuralNetwork::printWeights(string outputFile){
 }
 
 int main(int argc, const char * argv[]) {
-    NeuralNetwork net = NeuralNetwork("init.txt");
-    net.printWeights("initW.txt");
-    net.learn();
+    string inputFile;
+    cout << "Please enter the name of the file containing the starting weights.\n";
+    cin >> inputFile;
+    
+    ifstream fin;
+    fin.open(inputFile);
+    // Checks for valid file name
+    while(!fin.is_open()){
+        cout << "The file you have entered cannot be found. Please enter a new file name.\n";
+        cin >> inputFile;
+        fin.open(inputFile);
+    }
+    fin.close();
+    
+    NeuralNetwork net = NeuralNetwork(inputFile);
+    net.test();
     return 0;
 }
