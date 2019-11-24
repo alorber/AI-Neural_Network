@@ -7,6 +7,7 @@
 //
 
 #include <iostream>
+#include <iomanip>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -76,8 +77,28 @@ public:
     }
     void learn();
     void test();
-    void printWeights(){
-        
+    void printWeights(string outputFile){
+        ofstream fout;
+        fout.open(outputFile);
+        fout << numInputNodes << " " << numHiddenNodes << " " << numOutputNodes << '\n';
+        // Prints all weights
+            // Input layer -> hidden layer
+        for(int i = 0; i < numHiddenNodes; i++){
+            fout << fixed << setprecision(3) << hiddenLayer.at(i).biasWeight;
+            for(int j = 0; j < numInputNodes; j++){
+                fout << " " << fixed << setprecision(3) << hiddenLayer.at(i).inputWeights.at(j);
+            }
+            fout << '\n';
+        }
+            // Hidden layer -> output layer
+        for(int i = 0; i < numOutputNodes; i++){
+            fout << fixed << setprecision(3) << outputLayer.at(i).biasWeight;
+            for(int j = 0; j < numHiddenNodes; j++){
+                fout << " " << fixed << setprecision(3) << outputLayer.at(i).inputWeights.at(j);
+            }
+            fout << '\n';
+        }
+        fout.close();
     };
     double sigmoid(double value){
         return (1 / (1 + exp(value * (-1))));
@@ -146,7 +167,7 @@ void NeuralNetwork::learn(){
     fin.close();
     
     for(int i = 0; i < numEpochs; i++){
-        for(int j = 0; i < numExamples; j++){
+        for(int j = 0; j < numExamples; j++){
             // Initializes inputs
             for(int k = 0; k < numInputNodes; k++){
                 inputLayer.at(k).input = inputLayer.at(k).activation = examples.at(j).at(0).at(k);
@@ -207,10 +228,12 @@ void NeuralNetwork::learn(){
             }
         }
     }
+    printWeights(outFile);
 }
 
 int main(int argc, const char * argv[]) {
     NeuralNetwork net = NeuralNetwork("init.txt");
+    net.printWeights("initW.txt");
     net.learn();
     return 0;
 }
