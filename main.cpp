@@ -35,79 +35,62 @@ private:
     vector<Node> outputLayer;
     
 public:
-    // Initialize Neural Network
-    NeuralNetwork(string inputFile){
-        // Opens initialization file
-        ifstream fin;
-        fin.open(inputFile);
-        fin >> numInputNodes >> numHiddenNodes >> numOutputNodes;
-        
-        // Initializes layers
-        Node emptyNode;
-        double weight;
-        
-            // Input Layer
-        for(int i = 0; i < numInputNodes; i++){
-            inputLayer.push_back(emptyNode);
-        }
-            // Hidden Layer
-        for(int i = 0; i < numHiddenNodes; i++){
-            hiddenLayer.push_back(emptyNode);
-            
-            // Adds weights to node
-            fin >> hiddenLayer.at(i).biasWeight;
-        
-            for(int j = 0; j < numInputNodes; j++){
-                fin >> weight;
-                hiddenLayer.at(i).inputWeights.push_back(weight);
-            }
-        }
-            // Output Layer
-        for(int i = 0; i < numOutputNodes; i++){
-            outputLayer.push_back(emptyNode);
-            
-            // Adds weights to node
-            fin >> outputLayer.at(i).biasWeight;
-            for(int j = 0; j < numHiddenNodes; j++){
-                fin >> weight;
-                outputLayer.at(i).inputWeights.push_back(weight);
-            }
-        }
-        fin.close();
-    }
+    NeuralNetwork(string inputFile);
     void learn();
     void test();
-    void printWeights(string outputFile){
-        ofstream fout;
-        fout.open(outputFile);
-        fout << numInputNodes << " " << numHiddenNodes << " " << numOutputNodes << '\n';
-        // Prints all weights
-            // Input layer -> hidden layer
-        for(int i = 0; i < numHiddenNodes; i++){
-            fout << fixed << setprecision(3) << hiddenLayer.at(i).biasWeight;
-            for(int j = 0; j < numInputNodes; j++){
-                fout << " " << fixed << setprecision(3) << hiddenLayer.at(i).inputWeights.at(j);
-            }
-            fout << '\n';
-        }
-            // Hidden layer -> output layer
-        for(int i = 0; i < numOutputNodes; i++){
-            fout << fixed << setprecision(3) << outputLayer.at(i).biasWeight;
-            for(int j = 0; j < numHiddenNodes; j++){
-                fout << " " << fixed << setprecision(3) << outputLayer.at(i).inputWeights.at(j);
-            }
-            fout << '\n';
-        }
-        fout.close();
-    };
+    void printWeights(string outputFile);
+    // Sigmoid activation function
     double sigmoid(double value){
         return (1 / (1 + exp(value * (-1))));
     }
+    // Derivative of the sigmoid activation function
     double sigmoidPrime(double value){
         return (sigmoid(value) * (1 - sigmoid(value)));
     }
 };
 
+// Initialize Neural Network
+NeuralNetwork::NeuralNetwork(string inputFile){
+    // Opens initialization file
+    ifstream fin;
+    fin.open(inputFile);
+    fin >> numInputNodes >> numHiddenNodes >> numOutputNodes;
+    
+    // Initializes layers
+    Node emptyNode;
+    double weight;
+    
+    // Input Layer
+    for(int i = 0; i < numInputNodes; i++){
+        inputLayer.push_back(emptyNode);
+    }
+    // Hidden Layer
+    for(int i = 0; i < numHiddenNodes; i++){
+        hiddenLayer.push_back(emptyNode);
+        
+        // Adds weights to node
+        fin >> hiddenLayer.at(i).biasWeight;
+        
+        for(int j = 0; j < numInputNodes; j++){
+            fin >> weight;
+            hiddenLayer.at(i).inputWeights.push_back(weight);
+        }
+    }
+    // Output Layer
+    for(int i = 0; i < numOutputNodes; i++){
+        outputLayer.push_back(emptyNode);
+        
+        // Adds weights to node
+        fin >> outputLayer.at(i).biasWeight;
+        for(int j = 0; j < numHiddenNodes; j++){
+            fin >> weight;
+            outputLayer.at(i).inputWeights.push_back(weight);
+        }
+    }
+    fin.close();
+}
+
+// Trains the Neural Network
 void NeuralNetwork::learn(){
     string trainingFile;
     string outFile;
@@ -229,6 +212,31 @@ void NeuralNetwork::learn(){
         }
     }
     printWeights(outFile);
+}
+
+// Prints the weights
+void NeuralNetwork::printWeights(string outputFile){
+    ofstream fout;
+    fout.open(outputFile);
+    fout << numInputNodes << " " << numHiddenNodes << " " << numOutputNodes << '\n';
+    // Prints all weights
+    // Input layer -> hidden layer
+    for(int i = 0; i < numHiddenNodes; i++){
+        fout << fixed << setprecision(3) << hiddenLayer.at(i).biasWeight;
+        for(int j = 0; j < numInputNodes; j++){
+            fout << " " << fixed << setprecision(3) << hiddenLayer.at(i).inputWeights.at(j);
+        }
+        fout << '\n';
+    }
+    // Hidden layer -> output layer
+    for(int i = 0; i < numOutputNodes; i++){
+        fout << fixed << setprecision(3) << outputLayer.at(i).biasWeight;
+        for(int j = 0; j < numHiddenNodes; j++){
+            fout << " " << fixed << setprecision(3) << outputLayer.at(i).inputWeights.at(j);
+        }
+        fout << '\n';
+    }
+    fout.close();
 }
 
 int main(int argc, const char * argv[]) {
