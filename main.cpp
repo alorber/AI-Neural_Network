@@ -35,7 +35,42 @@ private:
 public:
     // Initialize Neural Network
     NeuralNetwork(string inputFile){
+        // Opens initialization file
+        ifstream fin;
+        fin.open(inputFile);
+        fin >> numInputNodes >> numHiddenNodes >> numOutputNodes;
         
+        // Initializes layers
+        Node emptyNode;
+        float weight;
+        
+            // Input Layer
+        for(int i = 0; i < numInputNodes; i++){
+            inputLayer.push_back(emptyNode);
+        }
+            // Hidden Layer
+        for(int i = 0; i < numHiddenNodes; i++){
+            hiddenLayer.push_back(emptyNode);
+            
+            // Adds weights to node
+            fin >> hiddenLayer.at(i).biasWeight;
+        
+            for(int j = 0; j < numInputNodes; j++){
+                fin >> weight;
+                hiddenLayer.at(i).inputWeights.push_back(weight);
+            }
+        }
+            // Output Layer
+        for(int i = 0; i < numOutputNodes; i++){
+            outputLayer.push_back(emptyNode);
+            
+            // Adds weights to node
+            fin >> outputLayer.at(i).biasWeight;
+            for(int j = 0; j < numHiddenNodes; j++){
+                fin >> weight;
+                outputLayer.at(i).inputWeights.push_back(weight);
+            }
+        }
     }
     void learn();
     void test();
@@ -43,6 +78,6 @@ public:
 };
 
 int main(int argc, const char * argv[]) {
-    
+    NeuralNetwork net = NeuralNetwork("init.txt");
     return 0;
 }
