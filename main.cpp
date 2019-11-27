@@ -394,8 +394,20 @@ void NeuralNetwork::printWeights(string outputFile){
 }
 
 int main(int argc, const char * argv[]) {
+    // Allows user to decide function to run
+    double choice;
+    cout << "This is an artificial neural network. Would you like to:\n   1. Train\n   2. Test\n\n";
+    cout << "Please enter the number of your choice.\n";
+    
+    cin >> choice;
+    // Checks for correct input
+    while(choice != 1 && choice != 2){
+        cout << "The number you entered was invalid. Please choose a choice from above.\n";
+        cin >> choice;
+    }
+    
     string inputFile;
-    cout << "Please enter the name of the file containing the starting weights.\n";
+    cout << "\nPlease enter the name of the file containing the starting weights.\n";
     cin >> inputFile;
     
     ifstream fin;
@@ -407,8 +419,13 @@ int main(int argc, const char * argv[]) {
         fin.open(inputFile);
     }
     fin.close();
-    
+    // Creates neural network
     NeuralNetwork net = NeuralNetwork(inputFile);
-    net.test();
+    if(choice == 1){
+        net.learn();
+    } else {
+        net.test();
+    }
+    
     return 0;
 }
