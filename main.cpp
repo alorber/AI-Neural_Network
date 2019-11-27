@@ -264,10 +264,21 @@ void NeuralNetwork::test(){
         examples.push_back(example);
     }
     fin.close();
-    vector<vector<int>> outputs;
-    vector<int> tOutputs;
+    
+    // Confusion Matrix for each output. 4 element vector {A, B, C, D}
+    vector<double> confusionMatrix = {0, 0, 0, 0};
+    vector<vector<double>> confusionMatrices;
+    // Adds a matrix for each output node
+    for(int i = 0; i < numOutputNodes; i++){
+        confusionMatrices.push_back(confusionMatrix);
+    }
+    // Global counts for micro-averaging
+    double globalA = 0,
+        globalB = 0,
+        globalC = 0,
+        globalD = 0;
+    
     for(int i = 0; i < numExamples; i++){
-        tOutputs.clear();
         // Initializes inputs
         for(int j = 0; j < numInputNodes; j++){
             inputLayer.at(j).input = inputLayer.at(j).activation = examples.at(i).at(0).at(j);
@@ -291,14 +302,70 @@ void NeuralNetwork::test(){
             }
             outputLayer.at(j).input = sum;
             outputLayer.at(j).activation = sigmoid(sum);
-            if(outputLayer.at(j).activation >= 0.5){
-                tOutputs.push_back(1);
+            if(outputLayer.at(j).activation >= 0.5 && examples.at(i).at(1).at(j) == 1){
+                // A
+                confusionMatrices.at(j).at(0)++;
+                globalA++;
+            } else if (outputLayer.at(j).activation >= 0.5 && examples.at(i).at(1).at(j) == 0){
+                // B
+                confusionMatrices.at(j).at(1)++;
+                globalB++;
+            } else if(outputLayer.at(j).activation < 0.5 && examples.at(i).at(1).at(j) == 1){
+                // C
+                confusionMatrices.at(j).at(2)++;
+                globalC++;
             } else {
-                tOutputs.push_back(0);
+                // D
+                confusionMatrices.at(j).at(3)++;
+                globalD++;
             }
         }
-        outputs.push_back(tOutputs);
     }
+    
+    // Calculates metrics and prints to output file
+    ofstream fout;
+    fout.open(outFile);
+    
+    double accuracy, precision, recall, f1;
+    double macroAccuracy = 0,
+            macroPrecision = 0,
+            macroRecall = 0,
+            macroF1 = 0;
+    
+    double A, B, C, D;
+    for(int i = 0; i < numOutputNodes; i++){
+        A = confusionMatrices.at(i).at(0);
+        B = confusionMatrices.at(i).at(1);
+        C = confusionMatrices.at(i).at(2);
+        D = confusionMatrices.at(i).at(3);
+        
+        accuracy = (A + D) / (A + B + C + D);
+        precision = A / (A + B);
+        recall = A / (A + C);
+        f1 = (2 * precision * recall) / (precision + recall);
+        
+        fout << fixed << setprecision(0) << A << " " << B << " " << C << " " << D << " " << fixed << setprecision(3) << accuracy << " " << precision << " " << recall << " " << f1 << '\n';
+        
+        macroAccuracy += accuracy;
+        macroPrecision += precision;
+        macroRecall += recall;
+    }
+    
+    macroAccuracy /= numOutputNodes;
+    macroPrecision /= numOutputNodes;
+    macroRecall /= numOutputNodes;
+    macroF1 = (2 * macroPrecision * macroRecall) / (macroPrecision + macroRecall);
+    
+    double microAccuracy = (globalA + globalD) / (globalA + globalB + globalC + globalD);
+    double microPrecision = globalA / (globalA + globalB);
+    double microRecall = globalA / (globalA + globalC);
+    double microF1 = (2 * microPrecision * microRecall) / (microPrecision + microRecall);
+    
+    fout << fixed << setprecision(3) << microAccuracy << " " << microPrecision << " " << microRecall << " " << microF1 << '\n';
+    fout << fixed << setprecision(3) << macroAccuracy << " " << macroPrecision << " " << macroRecall << " " << macroF1 << '\n';
+    
+    fout.close();
+    
 }
 
 // Prints the weights
